@@ -26,8 +26,10 @@ describe('User-Agent Utils', () => {
                 'Mozilla/5.0 (compatible; Clash/1.0)', // Hypothetical mixed UA
                 'Shadowrocket/2.1.82 (iOS; 14.6; Scale/3.0)',
                 'Quantumult%20X/1.0.22 (iPhone13,2; iOS 14.6)',
+                'Egern/1.0.73 (iPhone; iOS 17.0)',
                 'v2rayNG/1.6.25 (Linux; Android 11; Pixel 4 XL Build/RQ3A.210605.005) Go/1.16.5',
-                'NekoBox/1.0'
+                'NekoBox/1.0',
+                'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36 月兔/v2.0.9'
             ];
             proxies.forEach(ua => {
                 expect(isBrowserAgent(ua)).toBe(false);
@@ -45,7 +47,7 @@ describe('User-Agent Utils', () => {
     describe('determineTargetFormat', () => {
         it('should prioritize URL search params', () => {
             const params = new URLSearchParams('?target=singbox');
-            expect(determineTargetFormat('Clash/1.0', params)).toBe('base64');
+            expect(determineTargetFormat('Clash/1.0', params)).toBe('singbox');
 
             const params2 = new URLSearchParams('?clash=1');
             expect(determineTargetFormat('Other/1.0', params2)).toBe('clash');
@@ -64,9 +66,16 @@ describe('User-Agent Utils', () => {
             expect(determineTargetFormat('Clash.Meta/1.0', params)).toBe('clash');
             expect(determineTargetFormat('ClashVerge/1.0', params)).toBe('clash');
             expect(determineTargetFormat('Shadowrocket/2.0', params)).toBe('base64');
-            expect(determineTargetFormat('sing-box/1.0', params)).toBe('base64');
+            expect(determineTargetFormat('sing-box/1.0', params)).toBe('singbox');
+            expect(determineTargetFormat('Egern/1.0.73 (iPhone; iOS 17.0)', params)).toBe('egern');
             expect(determineTargetFormat('Quantumult X', params)).toBe('quanx');
             expect(determineTargetFormat('Loon/2.1', params)).toBe('loon');
+        });
+
+        it('should treat Yuetu Android clients as Clash-compatible', () => {
+            const params = new URLSearchParams('');
+            expect(determineTargetFormat('月兔/v2.0.9 Platform/android', params)).toBe('clash');
+            expect(determineTargetFormat('Yuetu/v2.0.9 Platform/android', params)).toBe('clash');
         });
 
         it('should fallback to base64 for unknown UAs', () => {
